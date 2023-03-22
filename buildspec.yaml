@@ -1,0 +1,44 @@
+version: 0.2
+
+env:
+  variables:
+    SETTING_SRC: "settings_x108t.xml"
+  exported-variables:
+    - DATE
+    - TIME
+    - PROJECT_NAME
+    - BUILD_PROJ
+    - BUILD_GUID
+    - LAST_HASH
+    - ARTIFACT
+    - AUTHOR_EMAIL
+  git-credential-helper: yes
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+
+  pre_build:
+    commands:
+      - DATE=$(date +%Y%m%d)
+      - TIME=$(date +%H%M%S)
+      - echo Output Java version...; java -version
+      - echo Output Maven version...; mvn -v
+
+  build:
+    commands:
+      - echo Change directory back to root...; cd $CODEBUILD_SRC_DIR
+      - echo Call processing for shoppingcart-client...; . ./cicd/shoppingcart-client-build.sh
+      - echo Change directory back to root...; cd $CODEBUILD_SRC_DIR
+      - echo Call processing for shoppingcart-service...; . ./cicd/shoppingcart-service-build.sh
+
+  post_build:
+    commands:
+      - echo Change directory back to root...; cd $CODEBUILD_SRC_DIR
+      - echo Call bundling for shoppingcart-service...; . ./cicd/shoppingcart-service-bundle.sh
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: output
